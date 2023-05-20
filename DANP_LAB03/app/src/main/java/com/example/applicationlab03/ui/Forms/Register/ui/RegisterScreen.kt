@@ -1,14 +1,11 @@
 package com.example.applicationlab03.ui.forms.register.ui
 
-import android.content.res.Configuration
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,17 +30,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.applicationlab03.ui.theme.ApplicationLab03Theme
 import com.maxkeppeker.sheets.core.models.base.rememberSheetState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
 import com.maxkeppeler.sheets.calendar.models.CalendarSelection
 
-@Preview(showSystemUi = true, showBackground = true,uiMode = Configuration.UI_MODE_NIGHT_YES)
+//@Preview(showSystemUi = true, showBackground = true,uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun RegisterScreen (){
+fun RegisterScreen(navController: NavHostController) {
     ApplicationLab03Theme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -55,14 +52,14 @@ fun RegisterScreen (){
                     .padding(15.dp),
             ){
                 Text(text = "Registro de Datos")
-                Register(Modifier.align(Alignment.Center))
+                Register(Modifier.align(Alignment.Center),navController)
             }
         }
     }
 }
 
 @Composable
-fun Register(modifier: Modifier) {
+fun Register(modifier: Modifier, navController: NavHostController) {
     Column(modifier = modifier,verticalArrangement = Arrangement.spacedBy(40.dp)) {
         FullName()
 
@@ -76,13 +73,13 @@ fun Register(modifier: Modifier) {
 
         Amount()
 
-        SendButton()
+        SendButton(navController)
     }
 }
 
 @Composable
-fun SendButton() {
-    Button(onClick = { /*TODO*/ },
+fun SendButton(navController: NavHostController) {
+    Button(onClick = { navController.navigate("list")},
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
