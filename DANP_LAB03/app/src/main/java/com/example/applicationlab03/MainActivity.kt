@@ -3,44 +3,41 @@ package com.example.applicationlab03
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.applicationlab03.ui.theme.ApplicationLab03Theme
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.applicationlab03.ui.forms.edit.ui.EditScreen
+import com.example.applicationlab03.ui.forms.edit.ui.EditViewModel
+import com.example.applicationlab03.ui.forms.register.ui.RegisterScreen
+import com.example.applicationlab03.ui.forms.register.ui.RegisterViewModel
+import com.example.applicationlab03.ui.lists.attends.ui.ListAttendeesScreen
+import com.example.applicationlab03.ui.lists.attends.ui.ListAttendeesViewModel
+import com.example.applicationlab03.ui.models.PersonRepository
 
 class MainActivity : ComponentActivity() {
+    private val personRepository = PersonRepository
+    private val listAttendeesViewModel = ListAttendeesViewModel(personRepository)
+    private val registerViewModel = RegisterViewModel(personRepository)
+    private val editViewModel = EditViewModel(personRepository)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ApplicationLab03Theme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("Android")
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "list") {
+                composable("main/{id}", arguments = listOf(navArgument("id"){type = NavType.StringType})) {
+                    backStackEntry -> val id = backStackEntry.arguments?.getString("id")
+                    EditScreen(registerViewModel,navController,editViewModel,id)
+                }
+                composable("list") {
+                    ListAttendeesScreen(listAttendeesViewModel,navController)
+                }
+                composable("register") {
+                    RegisterScreen(registerViewModel,navController,null)
                 }
             }
+
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ApplicationLab03Theme {
-        Greeting("Android")
     }
 }
