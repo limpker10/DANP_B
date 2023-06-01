@@ -6,13 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.danp2023room.entities.BookEntity
 import com.example.danp2023room.entities.StudentEntity
+import com.example.danp2023room.entities.UnitEntity
+import com.example.danp_lab04.model.UnitDao
 
 
 @Database(
-    entities = [StudentEntity::class, BookEntity::class],
-    version = 4
+    entities = [StudentEntity::class, BookEntity::class, UnitEntity::class],
+    version = 5
 )
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun unitDao(): UnitDao
     abstract fun studentDao(): StudentDao
     abstract fun bookDao(): BookDao
 

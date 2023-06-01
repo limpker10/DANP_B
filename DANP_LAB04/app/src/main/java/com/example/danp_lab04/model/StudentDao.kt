@@ -25,4 +25,5 @@ interface StudentDao {
 
     @Delete
     suspend fun delete(studentEntity: StudentEntity)
+
 }
