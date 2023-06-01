@@ -2,7 +2,6 @@ package com.example.danp_lab04
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -15,8 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,14 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.danp2023room.entities.BookEntity
 import com.example.danp2023room.entities.StudentEntity
 import com.example.danp2023room.entities.UnitEntity
@@ -65,14 +55,27 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
 
-                    val navController = rememberNavController()
                     val context = LocalContext.current
                     val repository = Repository(AppDatabase.getInstance(context.applicationContext))
-                    NavHost(navController = navController, startDestination = "main") {
-                        composable("main") { RoomSample(repository,navController) }
-                        composable("listCourses") { UnitWithStudentScreen(repository,navController) }
-                        /*...*/
+                    var unitsWithStudents by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
+                    val scope = rememberCoroutineScope()
+                    Column(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            RoomSample(repository,scope,onListUpdated = {
+                                // Actualizar la lista de unitsWithStudents
+
+                                scope.launch  {
+                                    unitsWithStudents = repository.getUnitsWithStudents()
+                                }
+                            })
+
+                        }
+                        Box(modifier = Modifier.fillMaxWidth() ){
+                            UnitWithStudentScreen(repository,unitsWithStudents)
+                        }
                     }
+
 
 
                 }
@@ -84,89 +87,30 @@ class MainActivity : ComponentActivity() {
 
 
 
+
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun RoomSample(repository: Repository, navController:NavController) {
+fun RoomSample(repository: Repository, scope:CoroutineScope, onListUpdated: () -> Unit) {
     val TAG: String = "RoomDatabase"
-    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(true) }
     Column(
         modifier = Modifier.padding(20.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        val fillDataOnClick = {
-            fillTables(repository, scope)
-        }
-
-        val studentsOnClick: () -> Unit = {
-            scope.launch {
-                repository.getAllStudents().forEach {
-                    Log.d(TAG, it.toString())
-                }
-            }
-        }
-        val coursesOnClick: () -> Unit = {
-            scope.launch {
-                repository.getUnitsWithStudents().forEach {
-                    Log.d(TAG, it.toString())
-
-                }
-            }
-        }
-
-        val booksOnClick: () -> Unit = {
-            scope.launch {
-                repository.getAllBooks().forEach {
-                    Log.d(TAG, it.toString())
-                }
-            }
-        }
-
-        val studentWithBooksOnClick: () -> Unit = {
-            scope.launch {
-                repository.getStudentWithBooks() .forEach {
-                    Log.d(TAG, it.toString())
-                }
-            }
-        }
-
-        // Nueva funcion para generar Cursos
-        val CoursesSampleOnClick: () -> Unit = {
-            scope.launch {
-                repository.getUnitsWithStudents() .forEach {
-                    Log.d(TAG, it.toString())
-                }
-            }
-            navController.navigate("listCourses")
+        val fillDataOnClick: () -> Unit = {
+            fillTables(repository,scope)
+            onListUpdated() // Llamar a la función de actualización después de llenar las tablas
+            isLoading = false
         }
 
         Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = fillDataOnClick) {
-            Text(text = "Fill student & book tables")
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = studentsOnClick) {
-            Text(text = "Show students")
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = CoursesSampleOnClick) {
-            Text(text = "Show Curses")
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = booksOnClick) {
-            Text(text = "Show books")
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(onClick = studentWithBooksOnClick) {
-            Text(text = "Student With Books")
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Button( colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7D5260)), onClick = fillDataOnClick) {
+        Button(modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7D5260)),
+            onClick = fillDataOnClick,
+            enabled = isLoading
+        ) {
             Text(text = "Generate sample Curses", color = Color.White)
         }
 
@@ -176,6 +120,7 @@ fun RoomSample(repository: Repository, navController:NavController) {
 fun fillTables(rep: Repository, scope: CoroutineScope) {
 
     val students = ArrayList<StudentEntity>()
+
 
     for (i in 100..120) {
         val studentEntity = StudentEntity(i, fullname = "Student " + i.toString())
@@ -194,8 +139,6 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
         }
     }
 
-    //Se crearan 5 cursos
-
     val courseNames = listOf("Math", "English", "Science", "History")
 
     for (element in courseNames) {
@@ -208,24 +151,29 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
             }
         }
     }
-
 }
 
 @Composable
-fun UnitWithStudentScreen(repository: Repository, navController: NavHostController) {
-    var unitsWithStudents by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
+fun UnitWithStudentScreen(repository: Repository, unitsWithStudents: List<UnitWithStudent>) {
+    //var unitsWithStudents by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        unitsWithStudents = repository.getUnitsWithStudents()
-    }
+//    LaunchedEffect(Unit) {
+//        unitsWithStudents = repository.getUnitsWithStudents()
+//    }
     val groupedUnits = unitsWithStudents.groupBy { it.unit.name }
     LazyColumn {
-        groupedUnits.forEach { (unitName, unitWithStudents) ->
+        if (unitsWithStudents.isEmpty()) {
             item {
-                UnitGroupHeader(unitName)
+                Text("No se tiene ningún item en la pantalla")
             }
-            items(unitWithStudents) { unitWithStudent ->
-                UnitWithStudentCard(unitWithStudent)
+        } else {
+            groupedUnits.forEach { (unitName, unitWithStudents) ->
+                item {
+                    UnitGroupHeader(unitName)
+                }
+                items(unitWithStudents) { unitWithStudent ->
+                    UnitWithStudentCard(unitWithStudent)
+                }
             }
         }
     }
@@ -249,7 +197,9 @@ fun UnitWithStudentCard(unitWithStudent: UnitWithStudent) {
 @Composable
 fun UnitGroupHeader(unitName: String) {
     Card(
-        modifier = Modifier.padding(8.dp).fillMaxWidth(),colors = CardDefaults.cardColors(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondary,
         ),
     ) {
