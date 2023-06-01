@@ -11,4 +11,8 @@ data class StudentEntity(
 
     @ColumnInfo(name="apellido_nombre")
     val fullname: String
-)
+){
+    override fun toString(): String {
+        return "Student : $fullname"
+    }
+}

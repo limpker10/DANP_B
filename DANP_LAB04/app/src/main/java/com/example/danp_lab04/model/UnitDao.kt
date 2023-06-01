@@ -26,5 +26,4 @@ interface UnitDao {
     @Transaction
     @Query("SELECT * FROM unit")
     suspend fun getAllUnits(): List<UnitWithStudent>
-
 }

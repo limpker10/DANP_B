@@ -16,10 +16,10 @@ data class UnitEntity(
     @ColumnInfo(name = "credit")
     val credit: Int,
 
-    @ColumnInfo(name = "studentId")
-    val studentId: Int
+    @ColumnInfo(name = "studentOwnerId")
+    val studentOwnerId: Int
 
 )
 {
-    constructor(name: String,credit: Int,studentId: Int) : this(0, name,credit,studentId)
+    constructor(name: String,credit: Int,studentOwnerId:Int) : this(0, name, credit,studentOwnerId)
 }

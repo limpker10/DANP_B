@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -193,13 +194,21 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
         }
     }
 
-    for (i in 0..20) {
-        val studentId = Random.nextInt(100, 120)
-        val unitEntity = UnitEntity( "Course $i",Random.nextInt(2,4) ,studentId)
-        scope.launch {
-            rep.insertUnit(unitEntity)
+    //Se crearan 5 cursos
+
+    val courseNames = listOf("Math", "English", "Science", "History")
+
+    for (element in courseNames) {
+
+        for (j in 1..4) {
+            val studentId = Random.nextInt(100, 120)
+            val unit = UnitEntity(name = element, credit = Random.nextInt(2, 4),studentId)
+            scope.launch {
+                rep.insertUnit(unit)
+            }
         }
     }
+
 }
 
 @Composable
@@ -232,8 +241,7 @@ fun UnitWithStudentCard(unitWithStudent: UnitWithStudent) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = unitWithStudent.unit.name)
-            Text(text = unitWithStudent.students.toString())
+            Text(text = unitWithStudent.students.joinToString(", ") { it.fullname })
         }
     }
 }
@@ -241,7 +249,9 @@ fun UnitWithStudentCard(unitWithStudent: UnitWithStudent) {
 @Composable
 fun UnitGroupHeader(unitName: String) {
     Card(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier.padding(8.dp).fillMaxWidth(),colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+        ),
     ) {
         Text(
             text = unitName,
