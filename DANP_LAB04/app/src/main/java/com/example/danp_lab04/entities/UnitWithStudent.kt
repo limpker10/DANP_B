@@ -12,7 +12,7 @@ data class UnitWithStudent(
     val unit: UnitEntity,
 
     @Relation(
-        parentColumn = "studentOwnerId",
+        parentColumn = "studenCourseId",
         entityColumn = "studentId",
     )
     val students: List<StudentEntity> = emptyList()

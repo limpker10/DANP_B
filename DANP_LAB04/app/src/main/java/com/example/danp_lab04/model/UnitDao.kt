@@ -17,12 +17,6 @@ interface UnitDao {
     @Insert
     suspend fun insert(unitEntity: UnitEntity)
 
-    @Update
-    suspend fun updateUnit(unitEntity: UnitEntity)
-
-    @Delete
-    suspend fun deleteUnit(unitEntity: UnitEntity)
-
     @Transaction
     @Query("SELECT * FROM unit")
     suspend fun getAllUnits(): List<UnitWithStudent>

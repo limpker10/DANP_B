@@ -57,23 +57,30 @@ class MainActivity : ComponentActivity() {
 
                     val context = LocalContext.current
                     val repository = Repository(AppDatabase.getInstance(context.applicationContext))
-                    var unitsWithStudents by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
+                    var ListCourses by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
                     val scope = rememberCoroutineScope()
+                    var isLoadingList by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        ListCourses = repository.getUnitsWithStudents()
+                        if (ListCourses.isEmpty()){
+                            isLoadingList = true
+                        }
+                    }
                     Column(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
 
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            RoomSample(repository,scope,onListUpdated = {
+                            RoomSample(repository,scope,isLoadingList,onListUpdated = {
                                 // Actualizar la lista de unitsWithStudents
-
                                 scope.launch  {
-                                    unitsWithStudents = repository.getUnitsWithStudents()
+                                    ListCourses = repository.getUnitsWithStudents()
+                                    isLoadingList = false
                                 }
                             })
-
                         }
                         Box(modifier = Modifier.fillMaxWidth() ){
-                            UnitWithStudentScreen(repository,unitsWithStudents)
+                            CoursesListScreen(repository,ListCourses)
                         }
+
                     }
 
 
@@ -90,9 +97,9 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun RoomSample(repository: Repository, scope:CoroutineScope, onListUpdated: () -> Unit) {
+fun RoomSample(repository: Repository, scope:CoroutineScope, isLoadingList : Boolean, onListUpdated: () -> Unit) {
     val TAG: String = "RoomDatabase"
-    var isLoading by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier.padding(20.dp),
         verticalArrangement = Arrangement.Center,
@@ -101,17 +108,15 @@ fun RoomSample(repository: Repository, scope:CoroutineScope, onListUpdated: () -
 
         val fillDataOnClick: () -> Unit = {
             fillTables(repository,scope)
-            onListUpdated() // Llamar a la función de actualización después de llenar las tablas
-            isLoading = false
+            onListUpdated()
         }
 
         Spacer(modifier = Modifier.height(10.dp))
         Button(modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7D5260)),
             onClick = fillDataOnClick,
-            enabled = isLoading
+            enabled = isLoadingList
         ) {
-            Text(text = "Generate sample Curses", color = Color.White)
+            Text(text = "Generate Table Curses")
         }
 
     }
@@ -121,7 +126,6 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
 
     val students = ArrayList<StudentEntity>()
 
-
     for (i in 100..120) {
         val studentEntity = StudentEntity(i, fullname = "Student " + i.toString())
         students.add(studentEntity)
@@ -130,7 +134,6 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
     scope.launch {
         rep.insertStudents(students)
     }
-
     for (i in 0..20) {
         val studentId = Random.nextInt(100, 120)
         val bookEntity = BookEntity(name = "Book " + i.toString(), studentId)
@@ -139,9 +142,8 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
         }
     }
 
-    val courseNames = listOf("Math", "English", "Science", "History")
-
-    for (element in courseNames) {
+    val courses = listOf("Tecnologia de Informacion", "Fundamentos de Programacion", "Organizacion Metodos", "Programacion Web", "Estructura de Datos")
+    for (element in courses) {
 
         for (j in 1..4) {
             val studentId = Random.nextInt(100, 120)
@@ -154,25 +156,20 @@ fun fillTables(rep: Repository, scope: CoroutineScope) {
 }
 
 @Composable
-fun UnitWithStudentScreen(repository: Repository, unitsWithStudents: List<UnitWithStudent>) {
-    //var unitsWithStudents by remember { mutableStateOf<List<UnitWithStudent>>(emptyList()) }
-
-//    LaunchedEffect(Unit) {
-//        unitsWithStudents = repository.getUnitsWithStudents()
-//    }
+fun CoursesListScreen(repository: Repository, unitsWithStudents: List<UnitWithStudent>) {
     val groupedUnits = unitsWithStudents.groupBy { it.unit.name }
     LazyColumn {
         if (unitsWithStudents.isEmpty()) {
             item {
-                Text("No se tiene ningún item en la pantalla")
+                Text("No se tiene ningún curso")
             }
         } else {
             groupedUnits.forEach { (unitName, unitWithStudents) ->
                 item {
-                    UnitGroupHeader(unitName)
+                    CoursesGroup(unitName)
                 }
                 items(unitWithStudents) { unitWithStudent ->
-                    UnitWithStudentCard(unitWithStudent)
+                    CoursesCardList(unitWithStudent)
                 }
             }
         }
@@ -180,12 +177,10 @@ fun UnitWithStudentScreen(repository: Repository, unitsWithStudents: List<UnitWi
 }
 
 @Composable
-fun UnitWithStudentCard(unitWithStudent: UnitWithStudent) {
+fun CoursesCardList(unitWithStudent: UnitWithStudent) {
     Card(
         modifier = Modifier.padding(8.dp),
     ) {
-        // Customize the card UI as per your requirement
-        // For example:
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -195,7 +190,7 @@ fun UnitWithStudentCard(unitWithStudent: UnitWithStudent) {
 }
 
 @Composable
-fun UnitGroupHeader(unitName: String) {
+fun CoursesGroup(unitName: String) {
     Card(
         modifier = Modifier
             .padding(8.dp)
